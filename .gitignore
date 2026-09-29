@@ -1,0 +1,10 @@
+venv/
+.venv/
+__pycache__/
+.env
+*.log
+*.pkl
+*.joblib
+*.pcap
+data/
+models/

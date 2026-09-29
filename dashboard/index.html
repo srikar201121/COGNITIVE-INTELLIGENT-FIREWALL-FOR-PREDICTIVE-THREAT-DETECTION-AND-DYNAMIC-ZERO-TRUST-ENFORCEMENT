@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Intelligent Firewall PRO</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #050b14;
+            --card-bg: rgba(13, 19, 33, 0.6);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent-blue: #3b82f6;
+            --accent-green: #10b981;
+            --accent-red: #ef4444;
+            --accent-orange: #f59e0b;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: radial-gradient(circle at top, #0f172a, var(--bg-dark));
+            color: var(--text-main);
+            margin: 0;
+            padding: 40px 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: auto;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+            padding: 0 10px;
+        }
+
+        h1 {
+            font-size: 32px;
+            font-weight: 700;
+            background: linear-gradient(90deg, #60a5fa, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        h1::before {
+            content: '';
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            background: #60a5fa;
+            border-radius: 50%;
+            box-shadow: 0 0 15px #60a5fa;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(96, 165, 250, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(96, 165, 250, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(96, 165, 250, 0); }
+        }
+
+        button.start-btn {
+            background: linear-gradient(135deg, var(--accent-blue), #2563eb);
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 12px 28px;
+            border-radius: 12px;
+            color: white;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            font-family: inherit;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+        }
+
+        button.start-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.5);
+        }
+
+        button.start-btn.active {
+            background: linear-gradient(135deg, var(--accent-red), #dc2626);
+            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 24px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--card-border);
+            padding: 24px;
+            border-radius: 16px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(255,255,255,0.15);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .card h3 {
+            margin: 0 0 16px 0;
+            color: var(--text-muted);
+            font-size: 14px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .metric {
+            font-size: 42px;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            line-height: 1;
+        }
+
+        .metric.total { color: #f8fafc; }
+        .metric.blocked { color: var(--accent-red); }
+        .metric.allowed { color: var(--accent-green); }
+
+        .chart-box {
+            grid-column: span 2;
+            height: 300px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Lists for Info Cards */
+        .info-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            max-height: 220px;
+            overflow-y: auto;
+            padding-right: 8px;
+        }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: rgba(0,0,0,0.1); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.3); }
+
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255,255,255,0.03);
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+            border: 1px solid transparent;
+        }
+
+        .banned-item {
+            color: var(--accent-red);
+            border-left: 3px solid var(--accent-red);
+        }
+
+        .attack-item {
+            color: var(--accent-orange);
+            border-left: 3px solid var(--accent-orange);
+        }
+
+        /* Table Styling */
+        .table-card {
+            grid-column: span 4;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 8px;
+            margin-top: 10px;
+        }
+
+        th {
+            text-align: left;
+            padding: 0 16px 12px 16px;
+            color: var(--text-muted);
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        td {
+            padding: 16px;
+            background: rgba(255,255,255,0.02);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+        }
+
+        tbody tr {
+            transition: all 0.2s ease;
+            background: transparent;
+            animation: slideIn 0.3s ease-out forwards;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        tbody tr:hover td {
+            background: rgba(255,255,255,0.05);
+        }
+
+        td:first-child { border-radius: 8px 0 0 8px; }
+        td:last-child { border-radius: 0 8px 8px 0; }
+
+        /* Badges */
+        .badge {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            display: inline-block;
+            font-family: 'Outfit', sans-serif;
+            letter-spacing: 0.5px;
+        }
+
+        .bg-danger { background: rgba(239, 68, 68, 0.15); color: #fca5a5; border: 1px solid rgba(239, 68, 68, 0.3); }
+        .bg-warning { background: rgba(245, 158, 11, 0.15); color: #fcd34d; border: 1px solid rgba(245, 158, 11, 0.3); }
+        .bg-success { background: rgba(16, 185, 129, 0.15); color: #6ee7b7; border: 1px solid rgba(16, 185, 129, 0.3); }
+        .bg-info { background: rgba(59, 130, 246, 0.15); color: #93c5fd; border: 1px solid rgba(59, 130, 246, 0.3); }
+
+        .text-dim { color: var(--text-muted); }
+        .text-white { color: white; }
+
+        @media (max-width: 1200px) {
+            .grid { grid-template-columns: repeat(2, 1fr); }
+            .table-card { grid-column: span 2; }
+            .chart-box { grid-column: span 2; }
+        }
+
+        @media (max-width: 768px) {
+            .grid { grid-template-columns: 1fr; }
+            .table-card, .chart-box { grid-column: span 1; }
+            header { flex-direction: column; gap: 20px; text-align: center; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1>Cognitive Firewall PRO</h1>
+            <button id="monitorBtn" class="start-btn" onclick="toggleMonitoring()">Start Monitoring</button>
+        </header>
+
+        <div class="grid">
+            <div class="card">
+                <h3>Total Packets</h3>
+                <div id="val-total" class="metric total">0</div>
+            </div>
+
+            <div class="card">
+                <h3>Threats Blocked</h3>
+                <div id="val-blocked" class="metric blocked">0</div>
+            </div>
+
+            <div class="card">
+                <h3>Secure Traffic</h3>
+                <div id="val-allowed" class="metric allowed">0</div>
+            </div>
+
+            <div class="card chart-box">
+                <canvas id="trafficChart"></canvas>
+            </div>
+
+            <div class="card">
+                <h3>Attack Intelligence</h3>
+                <div id="attack-summary" class="info-list">
+                    <div class="text-dim" style="font-family: 'Outfit'; font-size: 14px;">Awaiting threat data...</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Blacklisted IPs</h3>
+                <div id="banned" class="info-list">
+                    <div class="text-dim" style="font-family: 'Outfit'; font-size: 14px;">System secure. No bans active.</div>
+                </div>
+            </div>
+
+            <div class="card table-card">
+                <h3>Live Network Activity Logs</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Timestamp</th>
+                            <th>Source IP</th>
+                            <th>Destination IP</th>
+                            <th>Protocol</th>
+                            <th>Size (Bytes)</th>
+                            <th>Risk Level</th>
+                            <th>Threat Type</th>
+                            <th>Action Taken</th>
+                        </tr>
+                    </thead>
+                    <tfoot id="logs-loading">
+                        <tr>
+                            <td colspan="8" style="text-align:center; color: var(--text-muted); background: transparent; padding: 30px;">
+                                Monitoring initialized. Awaiting network packets...
+                            </td>
+                        </tr>
+                    </tfoot>
+                    <tbody id="logs">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let chart;
+        let monitorInterval = null;
+
+        function initChart(){
+            const ctx = document.getElementById("trafficChart");
+            
+            // Set default defaults for chart font
+            Chart.defaults.color = '#94a3b8';
+            Chart.defaults.font.family = "'Outfit', sans-serif";
+
+            chart = new Chart(ctx, {
+                type: "doughnut",
+                data: {
+                    labels: ["Blocked Threats", "Allowed Traffic"],
+                    datasets: [{
+                        data: [0, 0],
+                        backgroundColor: ["#ef4444", "#10b981"],
+                        borderWidth: 0,
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '75%',
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { padding: 20, usePointStyle: true, pointStyle: 'circle' }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(13, 19, 33, 0.9)',
+                            titleFont: { size: 14, family: "'Outfit', sans-serif" },
+                            bodyFont: { size: 14, family: "'JetBrains Mono', monospace" },
+                            padding: 12,
+                            borderColor: 'rgba(255,255,255,0.1)',
+                            borderWidth: 1,
+                            cornerRadius: 8
+                        }
+                    }
+                }
+            });
+        }
+
+        initChart();
+
+        async function updateDashboard(){
+            try {
+                const res = await fetch("http://127.0.0.1:8000/live-dashboard");
+                
+                if(!res.ok){
+                    console.log("API error");
+                    return;
+                }
+                
+                const data = await res.json();
+                
+                let total = data.total_traffic || 0;
+                let blocked = data.blocked_count || 0;
+                let allowed = total - blocked;
+                
+                animateValue("val-total", parseInt(document.getElementById("val-total").innerText), total, 500);
+                animateValue("val-blocked", parseInt(document.getElementById("val-blocked").innerText), blocked, 500);
+                animateValue("val-allowed", parseInt(document.getElementById("val-allowed").innerText), allowed, 500);
+                
+                chart.data.datasets[0].data = [blocked, allowed];
+                chart.update();
+                
+                updateLogs(data.logs || []);
+                updateBanned(data.banned_ips || []);
+                updateAttackSummary(data.attack_summary || {});
+                
+            } catch(err) {
+                console.log("Backend not running");
+            }
+        }
+
+        // Helper for number animation
+        function animateValue(id, start, end, duration) {
+            if (start === end) return;
+            const obj = document.getElementById(id);
+            let startTimestamp = null;
+            const step = (timestamp) => {
+                if (!startTimestamp) startTimestamp = timestamp;
+                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+                obj.innerHTML = Math.floor(progress * (end - start) + start);
+                if (progress < 1) {
+                    window.requestAnimationFrame(step);
+                }
+            };
+            window.requestAnimationFrame(step);
+        }
+
+        // Helper to format Risk Level Badge
+        function getRiskBadge(riskStr) {
+            const r = (riskStr || '').toUpperCase();
+            if (r.includes('HIGH')) return `<span class="badge bg-danger">HIGH RISK</span>`;
+            if (r.includes('MED')) return `<span class="badge bg-warning">MEDIUM</span>`;
+            return `<span class="badge bg-info">LOW</span>`;
+        }
+
+        // Helper to format Action Badge
+        function getActionBadge(actionStr) {
+            const a = (actionStr || '').toUpperCase();
+            if (a.includes('BLOCK') || a.includes('DROP')) return `<span class="badge bg-danger">${actionStr}</span>`;
+            return `<span class="badge bg-success">${actionStr}</span>`;
+        }
+
+        function updateLogs(logs){
+            const tbody = document.getElementById("logs");
+            const loading = document.getElementById("logs-loading");
+            
+            if(logs.length === 0){
+                tbody.innerHTML = "";
+                if(loading) loading.style.display = "table-footer-group";
+                return;
+            }
+
+            if(loading) loading.style.display = "none";
+            
+            // Generate HTML for all rows
+            const rowsHtml = logs.map(log => {
+                // Formatting time slightly
+                const timeStr = log.timestamp.split('.')[0] || log.timestamp;
+                
+                return `
+                <tr>
+                    <td class="text-dim">${timeStr}</td>
+                    <td class="text-white">${log.src_ip}</td>
+                    <td class="text-dim">${log.dst_ip}</td>
+                    <!-- REMOVED PORT NUMBER HERE -->
+                    <td style="color: var(--accent-blue);">${log.protocol}</td>
+                    <td>${log.packet_size}</td>
+                    <td>${getRiskBadge(log.risk_level)}</td>
+                    <td style="color: ${log.attack_type && log.attack_type !== 'Normal' ? 'var(--accent-orange)' : 'var(--text-muted)'}; font-weight: ${log.attack_type && log.attack_type !== 'Normal' ? 'bold' : 'normal'};">
+                        ${log.attack_type || 'None'}
+                    </td>
+                    <td>${getActionBadge(log.action)}</td>
+                </tr>
+                `;
+            }).join('');
+            
+            tbody.innerHTML = rowsHtml;
+        }
+
+        function updateBanned(ips){
+            const div = document.getElementById("banned");
+            
+            if(!ips || ips.length === 0){
+                div.innerHTML = `<div class="text-dim" style="font-family: 'Outfit'; font-size: 14px;">System secure. No bans active.</div>`;
+                return;
+            }
+            
+            div.innerHTML = ips.map(ip => `
+                <div class="info-item banned-item">
+                    <span>${ip}</span>
+                    <span style="font-size: 11px; padding: 2px 6px; background: rgba(239, 68, 68, 0.2); border-radius: 4px;">BLOCKED</span>
+                </div>
+            `).join('');
+        }
+
+        function updateAttackSummary(summary){
+            const div = document.getElementById("attack-summary");
+            
+            const keys = Object.keys(summary).filter(k => k !== 'Normal'); // Hide 'Normal' if present
+            
+            if(keys.length === 0){
+                div.innerHTML = `<div class="text-dim" style="font-family: 'Outfit'; font-size: 14px;">Awaiting threat data...</div>`;
+                return;
+            }
+            
+            div.innerHTML = keys.map(key => `
+                <div class="info-item attack-item">
+                    <span>${key}</span>
+                    <strong style="color: white; background: rgba(255,255,255,0.1); padding: 2px 8px; border-radius: 4px;">${summary[key]}</strong>
+                </div>
+            `).join('');
+        }
+
+        function toggleMonitoring(){
+            const btn = document.getElementById("monitorBtn");
+            
+            if(monitorInterval){
+                clearInterval(monitorInterval);
+                monitorInterval = null;
+                btn.innerText = "Start Monitoring";
+                btn.classList.remove("active");
+            } else {
+                updateDashboard();
+                monitorInterval = setInterval(updateDashboard, 2000);
+                btn.innerText = "Stop Monitoring";
+                btn.classList.add("active");
+            }
+        }
+    </script>
+</body>
+</html>
